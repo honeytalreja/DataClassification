@@ -17,7 +17,10 @@ data = pd.read_csv("pima-indians-diabetes.data.csv")
 print("number of data and number of features respectively : "+str(data.shape))
 
 def main(train, test, percent):
-    best_x = ['kNN', 'Logistic Regression', 'Decision Tree', 'Random Forest', 'SVC']
+
+
+
+    best_x = ['SVC', 'Logistic Regression', 'kNN', 'Decision Tree', 'Random Forest']
     best_y = []
 
     train_X = train[train.columns[:8]]
@@ -26,18 +29,46 @@ def main(train, test, percent):
     test_Y = test['Outcome']
     listy=[]
     listx=[]
+
+    # Support Vector Classifier
+    svc = SVC(gamma='scale', degree=4,verbose=False)
+    svc.fit(train_X, train_Y)
+    y_pred = svc.predict(test_X)
+    accuracy = accuracy_score(y_pred, test_Y)
+    accuracy *= 100
+    print('Accuracy of SVC:', accuracy)
+    best_y.append(accuracy)
+
+
+
+    # Logistic Regression Classifier
+    model = LogisticRegression(C=2.1, penalty='l1', verbose=0)
+    model.fit(train_X,train_Y)
+    prediction = model.predict(test_X)
+    answer = metrics.accuracy_score(test_Y, prediction)
+    answer *= 100
+    print("Logistic Regression Prediction :", answer)
+    print(confusion_matrix(prediction,test_Y))
+    best_y.append(answer)
+
+    # K Nearest Neighbours Classifier
     knn_max, k_max = 0, 0
 
-    for i in range(5,35):
+    for i in range(10,40):
 
-        kn=KNeighborsClassifier(n_neighbors=i, algorithm='auto')
+        kn=KNeighborsClassifier(n_neighbors=i, algorithm='kd_tree', weights='uniform')
         kn.fit(train_X,train_Y)
+
         prediction4=kn.predict(test_X)
+
         # print("K-Nearest Neighbour Classifier : ")
         answer=metrics.accuracy_score(test_Y,prediction4)
+
         # print(str(answer*100)+"% accuracy for k=", i)
             # listx.append(i)
+
         answer *= 100
+
         listx.append(i)
         listy.append(answer)
 
@@ -57,21 +88,13 @@ def main(train, test, percent):
     best_y.append(knn_max)
 
 
-    model = LogisticRegression(C=1.8)
-    model.fit(train_X,train_Y)
-    prediction = model.predict(test_X)
-    answer = metrics.accuracy_score(test_Y, prediction)
-    answer *= 100
-    print("Logistic Regression Prediction :", answer)
-    print(confusion_matrix(prediction,test_Y))
-    best_y.append(answer)
-
+    # Decision Tree Classifier
     dt_x = []
     dt_y = []
     dt_max = 0
     dt_max_depth = 0
-    for i in range (2,20):
-        dt=DecisionTreeClassifier(max_depth=i,random_state=0)
+    for i in range (2,15):
+        dt=DecisionTreeClassifier(max_depth=i,random_state=0,class_weight='balanced')
         dt.fit(train_X,train_Y)
         prediction3 = dt.predict(test_X)
         answer = metrics.accuracy_score(test_Y,prediction3)
@@ -91,12 +114,11 @@ def main(train, test, percent):
     best_y.append(dt_max)
     print(confusion_matrix(prediction3,test_Y))
 
-
-
+    # Random Forest Classifier
     rf_estimators = 0
     rf_max = 0
     rf_x, rf_y = [], []
-    for i in range(20, 100, 5):
+    for i in range(20, 100, 10):
         rfc=sklearn.ensemble.RandomForestClassifier(n_estimators=i,random_state=0)
         rfc.fit(train_X,train_Y)
         prediction1=rfc.predict(test_X)
@@ -117,15 +139,7 @@ def main(train, test, percent):
     print('Best accuracy for random forest is found at estimators =', rf_estimators)
     print('best accuracy is = ', rf_max)
     best_y.append(rf_max)
-
-    svc = SVC(gamma='auto')
-    svc.fit(train_X, train_Y)
-    y_pred = svc.predict(test_X)
-    accuracy = accuracy_score(y_pred, test_Y)
-    accuracy *= 100
-    print('Accuracy of SVC:', accuracy)
-    best_y.append(accuracy)
-
+    
     plt.scatter(best_x, best_y)
     plt.title('Models and their accuracy')
 
@@ -135,13 +149,15 @@ def main(train, test, percent):
     plt.show()
 
 
+
+
 print('\n\nFor test size: 20%\n')
 train, test = train_test_split(data, test_size=0.20, random_state=0, stratify=data['Outcome'])
 main(train, test,"20%")
 
-print('\n\nFor test size: 30%\n')
-train, test = train_test_split(data, test_size=0.30, random_state=0, stratify=data['Outcome'])
-main(train, test,"30%")
+print('\n\nFor test size: 35%\n')
+train, test = train_test_split(data, test_size=0.35, random_state=0, stratify=data['Outcome'])
+main(train, test,"35%")
 
 print('\n\nFor test size: 40%\n')
 train, test = train_test_split(data, test_size=0.40, random_state=0, stratify=data['Outcome'])
